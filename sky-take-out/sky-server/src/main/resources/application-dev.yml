@@ -1,0 +1,47 @@
+spring:
+  datasource:
+    druid:
+      driver-class-name: org.postgresql.Driver
+      url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DATABASE:smart_logistics}
+      username: ${POSTGRES_USERNAME:postgres}
+      password: ${DB_PASSWORD:}
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: ${REDIS_DATABASE:0}
+
+sky:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    host: ${POSTGRES_HOST:localhost}
+    port: ${POSTGRES_PORT:5432}
+    database: ${POSTGRES_DATABASE:smart_logistics}
+    username: ${POSTGRES_USERNAME:postgres}
+    password: ${DB_PASSWORD:}
+  alioss:
+    endpoint: ${ALIOSS_ENDPOINT:local}
+    access-key-id: ${ALIOSS_ACCESS_KEY_ID:local}
+    access-key-secret: ${ALIOSS_ACCESS_KEY_SECRET:local}
+    bucket-name: ${ALIOSS_BUCKET_NAME:local}
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: ${REDIS_DATABASE:0}
+  wechat:
+    appid: ${WECHAT_APPID:local}
+    secret: ${WECHAT_SECRET:local}
+    mchid: ${WECHAT_MCHID:local}
+    mchSerialNo: ${WECHAT_MCH_SERIAL_NO:local}
+    privateKeyFilePath: ${WECHAT_PRIVATE_KEY_FILE_PATH:local}
+    apiV3Key: ${WECHAT_API_V3_KEY:local}
+    weChatPayCertFilePath: ${WECHAT_PAY_CERT_FILE_PATH:local}
+    notifyUrl: ${WECHAT_NOTIFY_URL:local}
+    refundNotifyUrl: ${WECHAT_REFUND_NOTIFY_URL:local}
+
+logging:
+  level:
+    com:
+      sky:
+        logistics: debug
