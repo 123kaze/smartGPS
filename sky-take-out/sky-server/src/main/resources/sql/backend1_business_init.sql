@@ -80,13 +80,13 @@ CREATE TABLE cargo_status_logs (
 CREATE INDEX idx_cargo_status_logs_cargo_time
   ON cargo_status_logs(cargo_id, created_at DESC);
 
--- Starter seed. password_hash 暂时放 123456，第一轮登录跑通后再换成加密存储。
+-- password_hash 为 123456 的 MD5: e10adc3949ba59abbe56e057f20f883e
 INSERT INTO users (id, username, password_hash, name, role, phone) VALUES
-('USR-001', 'shipper', '123456', '李货主', 'SHIPPER', '13800000001'),
-('USR-002', 'dispatcher', '123456', '王调度', 'DISPATCHER', '13800000002'),
-('USR-003', 'warehouse', '123456', '赵仓管', 'WAREHOUSE', '13800000003'),
-('USR-004', 'admin', '123456', '系统管理员', 'ADMIN', '13800000004'),
-('USR-005', 'driver', '123456', '张司机', 'DRIVER', '13800000005');
+('USR-001', 'shipper', 'e10adc3949ba59abbe56e057f20f883e', '李货主', 'SHIPPER', '13800000001'),
+('USR-002', 'dispatcher', 'e10adc3949ba59abbe56e057f20f883e', '王调度', 'DISPATCHER', '13800000002'),
+('USR-003', 'warehouse', 'e10adc3949ba59abbe56e057f20f883e', '赵仓管', 'WAREHOUSE', '13800000003'),
+('USR-004', 'admin', 'e10adc3949ba59abbe56e057f20f883e', '系统管理员', 'ADMIN', '13800000004'),
+('USR-005', 'driver', 'e10adc3949ba59abbe56e057f20f883e', '张司机', 'DRIVER', '13800000005');
 
 INSERT INTO vehicles (
   plate, vin_topic, vehicle_type, capacity, driver_name, driver_phone,

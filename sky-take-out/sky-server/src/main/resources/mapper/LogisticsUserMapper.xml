@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sky.logistics.mapper.LogisticsUserMapper">
+
+    <select id="findByUsername" resultType="com.sky.logistics.entity.LogisticsUser">
+        SELECT
+            id,
+            username,
+            password_hash AS passwordHash,
+            name,
+            role,
+            phone,
+            created_at AS createdAt,
+            updated_at AS updatedAt
+        FROM users
+        WHERE username = #{username}
+    </select>
+
+    <select id="findById" resultType="com.sky.logistics.entity.LogisticsUser">
+        SELECT
+            id,
+            username,
+            password_hash AS passwordHash,
+            name,
+            role,
+            phone,
+            created_at AS createdAt,
+            updated_at AS updatedAt
+        FROM users
+        WHERE id = #{id}
+    </select>
+
+</mapper>

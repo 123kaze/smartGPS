@@ -1,5 +1,6 @@
 package com.sky.config;
 
+import com.github.xiaoymin.knife4j.spring.annotations.EnableKnife4j;
 import com.sky.interceptor.JwtTokenAdminInterceptor;
 import com.sky.interceptor.JwtTokenUserInterceptor;
 import com.sky.json.JacksonObjectMapper;
@@ -13,18 +14,23 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
 import springfox.documentation.builders.ApiInfoBuilder;
+import springfox.documentation.builders.ParameterBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.schema.ModelRef;
 import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.Parameter;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
  * 配置类，注册web层相关组件
  */
 @Configuration
+@EnableKnife4j
 @Slf4j
 public class WebMvcConfiguration extends WebMvcConfigurationSupport {
 
@@ -78,6 +84,8 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
      */
     protected void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/doc.html").addResourceLocations("classpath:/META-INF/resources/");
+        registry.addResourceHandler("/swagger-ui.html").addResourceLocations("classpath:/META-INF/resources/");
+        registry.addResourceHandler("/swagger-ui/**").addResourceLocations("classpath:/META-INF/resources/webjars/springfox-swagger-ui/");
         registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
     }
 
@@ -149,9 +157,20 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
         return new Docket(DocumentationType.SWAGGER_2)
                 .groupName("智慧物流接口")
                 .apiInfo(apiInfo)
+                .globalOperationParameters(Collections.singletonList(authorizationHeader()))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage("com.sky.logistics.controller"))
-                .paths(PathSelectors.any())
+                .paths(PathSelectors.ant("/api/v1/**"))
+                .build();
+    }
+
+    private Parameter authorizationHeader() {
+        return new ParameterBuilder()
+                .name("Authorization")
+                .description("登录后填写：Bearer <accessToken>")
+                .modelRef(new ModelRef("string"))
+                .parameterType("header")
+                .required(false)
                 .build();
     }
 }
