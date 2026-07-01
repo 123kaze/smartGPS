@@ -21,6 +21,9 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 public class MqttMessageReceiver {
 
+    private static final String MQTT_RECEIVED_TOPIC_HEADER = "mqtt_receivedTopic";
+    private static final String MQTT_TOPIC_HEADER = "mqtt_topic";
+
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
 
@@ -32,9 +35,9 @@ public class MqttMessageReceiver {
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public void handleMessage(Message<?> message) {
         // 1. 获取 MQTT 主题
-        String topic = (String) message.getHeaders().get("mqtt_topic");
+        String topic = resolveTopic(message);
         if (topic == null) {
-            log.warn("收到没有 mqtt_topic 的消息，丢弃");
+            log.warn("收到没有 MQTT topic header 的消息，headers={}，丢弃", message.getHeaders().keySet());
             return;
         }
         log.info("MQTT 收到消息，主题: {}", topic);
@@ -62,6 +65,14 @@ public class MqttMessageReceiver {
         } else {
             log.warn("未知的 MQTT 主题: {}", topic);
         }
+    }
+
+    private String resolveTopic(Message<?> message) {
+        Object topic = message.getHeaders().get(MQTT_RECEIVED_TOPIC_HEADER);
+        if (topic == null) {
+            topic = message.getHeaders().get(MQTT_TOPIC_HEADER);
+        }
+        return topic == null ? null : String.valueOf(topic);
     }
 
     /**
