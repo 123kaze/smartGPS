@@ -32,7 +32,7 @@ public class MqttMessageReceiver {
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public void handleMessage(Message<?> message) {
         // 1. 获取 MQTT 主题
-        String topic = (String) message.getHeaders().get("mqtt_topic");
+        String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
         if (topic == null) {
             log.warn("收到没有 mqtt_topic 的消息，丢弃");
             return;
