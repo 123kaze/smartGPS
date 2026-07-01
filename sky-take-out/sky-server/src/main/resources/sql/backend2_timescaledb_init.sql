@@ -5,6 +5,9 @@
 -- 启用 TimescaleDB 扩展（如果尚未启用）
 CREATE EXTENSION IF NOT EXISTS timescaledb;
 
+-- 本地调试统一显示北京时间。TIMESTAMPTZ 仍按绝对时间存储，只改变查询展示时区。
+ALTER DATABASE gps SET timezone TO 'Asia/Shanghai';
+
 -- 1. GPS 轨迹点超表
 DROP TABLE IF EXISTS gps_points CASCADE;
 
