@@ -40,6 +40,51 @@ services:
       timeout: 3s
       retries: 5
 
+  # Kafka 消息队列，接收 MQTT 转发后的 GPS 和心跳消息
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: logistics-kafka
+    hostname: kafka
+    ports:
+      - "9092:9092"     # Spring Boot 本地连接端口
+    environment:
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:29092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # 初始化后端 2 会用到的 Kafka Topic
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: logistics-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command:
+      - /bin/bash
+      - -c
+      - |
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic gps-points --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic vehicle-heartbeats --partitions 3 --replication-factor 1
+
   # EMQX MQTT Broker
   emqx:
     image: emqx/emqx:latest
@@ -81,5 +126,6 @@ services:
 volumes:
   postgres-data:
   redis-data:
+  kafka-data:
   emqx-data:
   minio-data:
