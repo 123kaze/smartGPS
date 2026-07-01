@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.websocket.OnClose;
-import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
@@ -27,15 +26,18 @@ public class LogisticsWebSocketServer {
         send(session, "{\"channel\":\"system.connected\",\"data\":{\"status\":\"OK\",\"sessionId\":\"" + session.getId() + "\"}}");
     }
 
-    @OnMessage
-    public void onMessage(String message, Session session) {
-        log.debug("WebSocket 收到消息: {}", message);
-    }
-
     @OnClose
     public void onClose(Session session) {
         sessions.remove(session.getId());
         log.info("WebSocket 连接关闭, sessionId={}, 当前连接数={}", session.getId(), sessions.size());
+    }
+
+    public static void broadcast(String channel, String jsonData) {
+        String payload = "{\"channel\":\"" + channel + "\",\"data\":" + jsonData + "}";
+        for (Session session : sessions.values()) {
+            send(session, payload);
+        }
+        log.info("WebSocket 广播, channel={}, 推送数={}", channel, sessions.size());
     }
 
     public static void broadcast(String channel, Map<String, Object> data) {
@@ -67,13 +69,15 @@ public class LogisticsWebSocketServer {
     }
 
     private static void send(Session session, String text) {
-        try {
-            if (session.isOpen()) {
-                session.getBasicRemote().sendText(text);
+        if (session != null && session.isOpen()) {
+            synchronized (session) {
+                try {
+                    session.getBasicRemote().sendText(text);
+                } catch (IOException e) {
+                    log.error("WebSocket 发送失败: {}", e.getMessage());
+                    sessions.remove(session.getId());
+                }
             }
-        } catch (IOException e) {
-            log.error("WebSocket 发送失败: {}", e.getMessage());
-            sessions.remove(session.getId());
         }
     }
 

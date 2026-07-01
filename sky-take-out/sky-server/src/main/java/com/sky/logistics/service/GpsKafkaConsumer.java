@@ -86,8 +86,8 @@ public class GpsKafkaConsumer {
 
             log.debug("GPS 已写入 TimescaleDB, vinTopic={}, lat={}, lng={}", vinTopic, gps.getLat(), gps.getLng());
 
-            // 3. 更新 Redis 最新位置
-            updateRedisLatest(plate, gps, ts);
+            // 3. 更新 Redis 最新位置（附带 vehicleId 供后端3 告警引擎使用）
+            updateRedisLatest(plate, vehicle.getId(), gps, ts);
 
         } catch (Exception e) {
             log.error("消费 GPS 消息失败: {}", e.getMessage(), e);
@@ -114,10 +114,11 @@ public class GpsKafkaConsumer {
      * 更新 Redis 中车辆最新位置
      * Key: logistics:vehicle:latest:{plate}
      */
-    private void updateRedisLatest(String plate, GpsData gps, Instant ts) {
+    private void updateRedisLatest(String plate, Long vehicleId, GpsData gps, Instant ts) {
         try {
             Map<String, Object> position = new LinkedHashMap<>();
             position.put("plate", plate);
+            position.put("vehicleId", vehicleId);
             position.put("lat", gps.getLat());
             position.put("lng", gps.getLng());
             position.put("speed", gps.getSpeed());
@@ -131,6 +132,10 @@ public class GpsKafkaConsumer {
             redisTemplate.opsForValue().set(key, json, Duration.ofHours(24));
 
             log.debug("Redis 最新位置已更新, key={}", key);
+
+            // 4. WebSocket 推送给前端
+            com.sky.logistics.controller.LogisticsWebSocketServer.broadcast("vehicle.position", json);
+
         } catch (Exception e) {
             log.error("Redis 更新失败: {}", e.getMessage(), e);
         }
