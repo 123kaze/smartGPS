@@ -26,6 +26,25 @@ services:
       timeout: 5s
       retries: 10
 
+  # TimescaleDB 时序库，存储 GPS 轨迹点和设备心跳
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: logistics-timescaledb
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "123456"
+      POSTGRES_DB: gps
+    volumes:
+      - timescaledb-data:/var/lib/postgresql/data
+      - ./sky-take-out/sky-server/src/main/resources/sql/backend2_timescaledb_init.sql:/docker-entrypoint-initdb.d/01_backend2_timescaledb.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gps"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   # Redis 缓存
   redis:
     image: redis:7-alpine
@@ -125,6 +144,7 @@ services:
 # 数据卷
 volumes:
   postgres-data:
+  timescaledb-data:
   redis-data:
   kafka-data:
   emqx-data:
