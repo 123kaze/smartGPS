@@ -5,6 +5,7 @@ import com.sky.logistics.common.PageResponse;
 import com.sky.logistics.dto.VehicleCreateDTO;
 import com.sky.logistics.dto.VehicleQueryDTO;
 import com.sky.logistics.dto.VehicleUpdateDTO;
+import com.sky.logistics.service.CommandService;
 import com.sky.logistics.service.LogisticsStarterService;
 import com.sky.logistics.service.VehicleService;
 import com.sky.logistics.vo.VehicleVO;
@@ -29,10 +30,13 @@ public class VehicleController {
 
     private final LogisticsStarterService starterService;
     private final VehicleService vehicleService;
+    private final CommandService commandService;
 
-    public VehicleController(LogisticsStarterService starterService, VehicleService vehicleService) {
+    public VehicleController(LogisticsStarterService starterService, VehicleService vehicleService,
+                              CommandService commandService) {
         this.starterService = starterService;
         this.vehicleService = vehicleService;
+        this.commandService = commandService;
     }
 
     @GetMapping
@@ -89,20 +93,25 @@ public class VehicleController {
     @PostMapping("/{plate}/command")
     @ApiOperation("下发车辆调度指令")
     public ApiResponse<Map<String, Object>> createCommand(@PathVariable String plate, @RequestBody Map<String, Object> request) {
-        return ApiResponse.success(starterService.createCommand(plate, request));
+        String commandType = request != null ? (String) request.get("commandType") : null;
+        String priority = request != null ? (String) request.get("priority") : null;
+        @SuppressWarnings("unchecked")
+        Map<String, Object> payload = request != null ? (Map<String, Object>) request.get("payload") : null;
+        String createdBy = request != null ? (String) request.get("createdBy") : "DISPATCHER";
+        return ApiResponse.success(commandService.createCommand(plate, commandType, priority, payload, createdBy));
     }
 
     @GetMapping("/{plate}/command/{commandId}")
     @ApiOperation("获取调度指令详情")
     public ApiResponse<Map<String, Object>> commandDetail(@PathVariable String plate, @PathVariable String commandId) {
-        return ApiResponse.success(starterService.commandDetail(plate, commandId));
+        return ApiResponse.success(commandService.getCommandDetail(plate, commandId));
     }
 
     @GetMapping("/{plate}/commands")
     @ApiOperation("获取车辆调度指令列表")
-    public ApiResponse<PageResponse<Map<String, Object>>> commands(@PathVariable String plate,
+    public ApiResponse<Map<String, Object>> commands(@PathVariable String plate,
                                                                    @RequestParam(required = false) Integer page,
                                                                    @RequestParam(required = false) Integer size) {
-        return ApiResponse.success(starterService.commands(plate, page, size));
+        return ApiResponse.success(commandService.listCommands(plate, page, size));
     }
 }

@@ -10,8 +10,10 @@ import org.springframework.integration.core.MessageProducer;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
+import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageHandler;
 
 /**
  * MQTT 配置类，负责连接 EMQX 并订阅车辆 GPS 和心跳主题
@@ -88,5 +90,21 @@ public class MqttConfig {
 
         log.info("MQTT 订阅主题: vehicle/+/gps, vehicle/+/heartbeat");
         return adapter;
+    }
+
+    @Bean
+    public MessageChannel mqttOutboundChannel() {
+        return new DirectChannel();
+    }
+
+    @Bean
+    @org.springframework.integration.annotation.ServiceActivator(inputChannel = "mqttOutboundChannel")
+    public MessageHandler mqttOutbound() {
+        MqttPahoMessageHandler handler =
+                new MqttPahoMessageHandler(clientId + "-outbound", mqttClientFactory());
+        handler.setAsync(true);
+        handler.setDefaultQos(1);
+        log.info("MQTT 出站适配器就绪");
+        return handler;
     }
 }
